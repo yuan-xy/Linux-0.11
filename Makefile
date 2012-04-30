@@ -1,3 +1,5 @@
+OS = Mac
+
 # indicate the Hardware Image file
 HDA_IMG = hdc-0.11.img
 
@@ -44,11 +46,11 @@ all:	Image
 
 Image: boot/bootsect boot/setup tools/system
 	@cp -f tools/system system.tmp
-	@strip system.tmp
-	@objcopy -O binary -R .note -R .comment system.tmp tools/kernel
+	@$(STRIP) system.tmp
+	@$(OBJCOPY) -O binary -R .note -R .comment system.tmp tools/kernel
 	@tools/build.sh boot/bootsect boot/setup tools/kernel Image $(ROOT_DEV)
 	@rm system.tmp
-	@rm tools/kernel -f
+	@rm -f tools/kernel
 	@sync
 
 disk: Image
@@ -133,13 +135,11 @@ cscope:
 	@cscope -Rbkq
 
 start:
-	@qemu -m 16M -boot a -fda Image -hda $(HDA_IMG)
-
-bochs-start:
-	@$(BOCHS) -q -f tools/bochs/bochsrc/bochsrc-hd.bxrc	
+	@qemu-system-x86_64 -m 16M -boot a -fda Image -hda $(HDA_IMG)
 
 debug:
-	@qemu -m 16M -boot a -fda Image -hda $(HDA_IMG) -s -S -nographic -serial '/dev/ttyS0'
+	@echo $(OS)
+	@qemu-system-x86_64 -m 16M -boot a -fda Image -hda $(HDA_IMG) -s -S
 
 bochs-debug:
 	@$(BOCHS) -q -f tools/bochs/bochsrc/bochsrc-hd-dbg.bxrc	

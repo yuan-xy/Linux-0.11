@@ -20,12 +20,6 @@ LDFLAGS	+= -r
 
 CFLAGS	+= -I../include
 
-#ifneq ($(gcc_version), 4.3)
-
-#CFLAGS	+= -O1
-
-#endif
-
 CPP	+= -I../include
 
 .c.s:

@@ -1,17 +1,35 @@
-# This file is the Makefile Header for every sub Makefile, which designed to
-# simplfy the porting and maintaining operation
-# author: falcon <wuzhangjin@gmail.com>
-# update: 2008-10-29
+UNAME := $(shell uname)
 
-AS	= as --32
-LD	= ld
-#LDFLAGS = -m elf_i386 -x 
-LDFLAGS = -m elf_i386
-CC	= gcc
-CFLAGS  = -g -m32 -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
+ifeq ($(UNAME), Linux)
+	AS	= as --32
+	LD	= ld
+	#LDFLAGS = -m elf_i386 -x 
+	LDFLAGS = -m elf_i386
+	CC	= gcc
+	CFLAGS  = -g -m32 -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
 
-CPP	= cpp -nostdinc
-AR	= ar
+	CPP	= cpp -nostdinc
+	AR	= ar
+	STRIP = strip
+	OBJCOPY = objcopy
+	# we should use -fno-stack-protector with gcc 4.3
+	gcc_version=$(shell ls -l `which gcc` | tr '-' '\n' | tail -1)
+endif
 
-# we should use -fno-stack-protector with gcc 4.3
-gcc_version=$(shell ls -l `which gcc` | tr '-' '\n' | tail -1)
+
+
+ifeq ($(UNAME), Darwin)
+	AS	= i386-elf-as --32
+	LD	= i386-elf-ld
+	#LDFLAGS = -m elf_i386 -x 
+	LDFLAGS = -m elf_i386
+	CC	= i386-elf-gcc-4.3.2
+	CFLAGS  = -gdwarf-2 -g3 -m32 -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
+
+	CPP	= i386-elf-cpp-4.3.2 -nostdinc
+	AR	=i386-elf-ar
+	STRIP = i386-elf-strip
+	OBJCOPY = i386-elf-objcopy
+endif
+
+
