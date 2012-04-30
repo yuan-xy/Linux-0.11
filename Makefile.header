@@ -1,0 +1,17 @@
+# This file is the Makefile Header for every sub Makefile, which designed to
+# simplfy the porting and maintaining operation
+# author: falcon <wuzhangjin@gmail.com>
+# update: 2008-10-29
+
+AS	= as --32
+LD	= ld
+#LDFLAGS = -m elf_i386 -x 
+LDFLAGS = -m elf_i386
+CC	= gcc
+CFLAGS  = -g -m32 -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
+
+CPP	= cpp -nostdinc
+AR	= ar
+
+# we should use -fno-stack-protector with gcc 4.3
+gcc_version=$(shell ls -l `which gcc` | tr '-' '\n' | tail -1)
