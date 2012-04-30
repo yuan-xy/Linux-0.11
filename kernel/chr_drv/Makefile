@@ -27,8 +27,8 @@ chr_drv.a: $(OBJS)
 	@$(AR) rcs chr_drv.a $(OBJS)
 	sync
 
-keyboard.s: keyboard.S ../../include/linux/config.h
-	@$(CPP) keyboard.S -o keyboard.s
+keyboard.s: kb.S ../../include/linux/config.h
+	@$(CPP) kb.S -o keyboard.s
 
 clean:
 	@rm -f core *.o *.a tmp_make keyboard.s

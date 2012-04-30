@@ -1,5 +1,5 @@
 # indicate the Hardware Image file
-HDA_IMG = ../rootfs/hdc-0.11-new.img
+HDA_IMG = hdc-0.11.img
 
 # indicate the path of the calltree
 CALLTREE=$(shell find tools/ -name "calltree" -perm 755 -type f)
