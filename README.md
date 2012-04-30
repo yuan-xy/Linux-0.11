@@ -28,12 +28,14 @@ The old Linux kernel source ver 0.11 which has been tested under modern Linux,  
 
 ##2.1. Mac OS X Setup
 
-* install qemu
-	$ sudo port install qemu
 * install cross compiler gcc and binutils
-	$ sudo port install i386-elf-binutils i386-elf-gcc qemu
+* install qemu
 * install gdb. you need download the gdb source and compile it to use gdb because port doesn't provide i386-elf-gdb, or you can use the pre-compiled gdb in the tools directory.
 * a linux-0.11 hardware image file: hdc-0.11.img
+
+    $ sudo port install qemu
+    $ sudo port install i386-elf-binutils i386-elf-gcc
+
 
 ##2.2. hack linux-0.11
 
