@@ -31,10 +31,23 @@
 
 	ljmp $SETUPSEG, $_start	
 _start:
+	mov %cs,%ax
+	mov %ax,%ds
+	mov %ax,%es
+#
+##print some message
+#
+	mov $0x03, %ah
+	xor %bh, %bh
+	int $0x10
 
+	mov $29, %cx
+	mov $0x000b,%bx
+	mov $msg2,%bp
+	mov $0x1301, %ax
+	int $0x10
 # ok, the read went well so we get current cursor position and save it for
 # posterity.
-
 	mov	$INITSEG, %ax	# this is done in bootsect already, but...
 	mov	%ax, %ds
 	mov	$0x03, %ah	# read cursor pos
@@ -87,6 +100,84 @@ _start:
 	rep
 	movsb
 
+## modify ds
+	mov $INITSEG,%ax
+	mov %ax,%ds
+	mov $SETUPSEG,%ax
+	mov %ax,%es
+
+##show cursor pos:
+	mov $0x03, %ah 
+	xor %bh,%bh
+	int $0x10
+	mov $11,%cx
+	mov $0x000c,%bx
+	mov $cur,%bp
+	mov $0x1301,%ax
+	int $0x10
+##show detail
+	mov %ds:0 ,%ax
+	call print_hex
+	call print_nl
+
+##show memory size
+	mov $0x03, %ah
+	xor %bh, %bh
+	int $0x10
+	mov $12, %cx
+	mov $0x000a, %bx
+	mov $mem, %bp
+	mov $0x1301, %ax
+	int $0x10
+
+##show detail
+	mov %ds:2 , %ax
+	call print_hex
+
+##show 
+	mov $0x03, %ah
+	xor %bh, %bh
+	int $0x10
+	mov $25, %cx
+	mov $0x000d, %bx
+	mov $cyl, %bp
+	mov $0x1301, %ax
+	int $0x10
+##show detail
+	mov %ds:0x80, %ax
+	call print_hex
+	call print_nl
+
+##show 
+	mov $0x03, %ah
+	xor %bh, %bh
+	int $0x10
+	mov $8, %cx
+	mov $0x000e, %bx
+	mov $head, %bp
+	mov $0x1301, %ax
+	int $0x10
+##show detail
+	mov %ds:0x82, %ax
+	call print_hex
+	call print_nl
+
+##show 
+	mov $0x03, %ah
+	xor %bh, %bh
+	int $0x10
+	mov $8, %cx
+	mov $0x000f, %bx
+	mov $sect, %bp
+	mov $0x1301, %ax
+	int $0x10
+##show detail
+	mov %ds:0x8e, %ax
+	call print_hex
+	call print_nl
+l:
+	jmp l
+##
 # Check that there IS a hd1 :-)
 
 	mov	$0x01500, %ax
@@ -233,7 +324,49 @@ gdt_48:
 	.word	0x800			# gdt limit=2048, 256 GDT entries
 	.word   512+gdt, 0x9		# gdt base = 0X9xxxx, 
 	# 512+gdt is the real gdt after setup is moved to 0x9020 * 0x10
-	
+print_hex:
+	mov $4,%cx
+	mov %ax,%dx
+
+print_digit:
+	rol $4,%dx	#循环以使低4位用上，高4位移至低4位
+	mov $0xe0f,%ax #ah ＝ 请求的功能值，al = 半个字节的掩码
+	and %dl,%al
+	add $0x30,%al
+	cmp $0x3a,%al
+	jl outp
+	add $0x07,%al
+
+outp:
+	int $0x10
+	loop print_digit
+	ret
+#打印回车换行
+print_nl:
+	mov $0xe0d,%ax
+	int $0x10
+	mov $0xa,%al
+	int $0x10
+	ret
+
+msg2:
+	.byte 13,10
+	.ascii "Now we are in setup ..."
+	.byte 13,10,13,10
+cur:
+	.ascii "Cursor POS:"
+mem:
+	.ascii "Memory SIZE:"
+cyl:
+	.ascii "KB"
+	.byte 13,10,13,10
+	.ascii "HD Info"
+	.byte 13,10
+	.ascii "Cylinders:"
+head:
+	.ascii "Headers:"
+sect:
+	.ascii "Secotrs:"
 .text
 endtext:
 .data
