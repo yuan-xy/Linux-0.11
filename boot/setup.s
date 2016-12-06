@@ -175,8 +175,8 @@ _start:
 	mov %ds:0x8e, %ax
 	call print_hex
 	call print_nl
-l:
-	jmp l
+#l:
+#	jmp l
 ##
 # Check that there IS a hd1 :-)
 
