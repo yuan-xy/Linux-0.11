@@ -23,10 +23,12 @@ ifeq ($(UNAME), Darwin)
 	LD	= i386-elf-ld
 	#LDFLAGS = -m elf_i386 -x 
 	LDFLAGS = -m elf_i386
-	CC	= i386-elf-gcc-4.3.2
+	#CC	= i386-elf-gcc-4.3.2
+	CC	= i386-elf-gcc
 	CFLAGS  = -gdwarf-2 -g3 -m32 -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
 
-	CPP	= i386-elf-cpp-4.3.2 -nostdinc
+	#CPP	= i386-elf-cpp-4.3.2 -nostdinc
+	CPP	= i386-elf-cpp -nostdinc
 	AR	=i386-elf-ar
 	STRIP = i386-elf-strip
 	OBJCOPY = i386-elf-objcopy

@@ -42,20 +42,23 @@
 
 # ROOT_DEV:	0x000 - same type of floppy as boot.
 #		0x301 - first partition on first drive etc
+#
+##和源码不同，源码中是0x306 第2块硬盘的第一个分区
+#
 	.equ ROOT_DEV, 0x301
 	ljmp    $BOOTSEG, $_start
 _start:
-	mov	$BOOTSEG, %ax
+	mov	$BOOTSEG, %ax	#将ds段寄存器设置为0x7C0
 	mov	%ax, %ds
-	mov	$INITSEG, %ax
+	mov	$INITSEG, %ax	#将es段寄存器设置为0x900
 	mov	%ax, %es
-	mov	$256, %cx
-	sub	%si, %si
-	sub	%di, %di
-	rep	
-	movsw
-	ljmp	$INITSEG, $go
-go:	mov	%cs, %ax
+	mov	$256, %cx		#设置移动计数值256字
+	sub	%si, %si		#源地址	ds:si = 0x07C0:0x0000
+	sub	%di, %di		#目标地址 es:si = 0x9000:0x0000
+	rep					#重复执行并递减cx的值
+	movsw				#从内存[si]处移动cx个字到[di]处
+	ljmp	$INITSEG, $go	#段间跳转，这里INITSEG指出跳转到的段地址，解释了cs的值为0x9000
+go:	mov	%cs, %ax		#将ds，es，ss都设置成移动后代码所在的段处(0x9000)
 	mov	%ax, %ds
 	mov	%ax, %es
 # put stack at 0x9ff00.
@@ -65,6 +68,12 @@ go:	mov	%cs, %ax
 # load the setup-sectors directly after the bootblock.
 # Note that 'es' is already set up.
 
+#
+##ah=0x02 读磁盘扇区到内存	al＝需要独出的扇区数量
+##ch=磁道(柱面)号的低八位   cl＝开始扇区(位0-5),磁道号高2位(位6－7)
+##dh=磁头号					dl=驱动器号(硬盘则7要置位)
+##es:bx ->指向数据缓冲区；如果出错则CF标志置位,ah中是出错码
+#
 load_setup:
 	mov	$0x0000, %dx		# drive 0, head 0
 	mov	$0x0002, %cx		# sector 2, track 0
@@ -97,7 +106,7 @@ ok_load_setup:
 	xor	%bh, %bh
 	int	$0x10
 	
-	mov	$24, %cx
+	mov	$30, %cx
 	mov	$0x0007, %bx		# page 0, attribute 7 (normal)
 	#lea	msg1, %bp
 	mov     $msg1, %bp
@@ -246,7 +255,7 @@ sectors:
 
 msg1:
 	.byte 13,10
-	.ascii "Loading system ..."
+	.ascii "IceCityOS is booting ..."
 	.byte 13,10,13,10
 
 	.org 508
