@@ -14,15 +14,16 @@ The old Linux kernel source ver 0.11 which has been tested under modern Linux,  
 
 ## 1.2. hack linux-0.11
 ```bash
-    $ make help		// get help
-    $ make  		// compile
-    $ make start		// boot it on qemu
-    $ make debug		// debug it via qemu & gdb, you'd start gdb to connect it.
-
-    $ gdb tools/system
-    (gdb) target remote :1234
-    (gdb) b main
-    (gdb) c
+$ make help		// get help
+$ make  		// compile
+$ make start		// boot it on qemu
+$ make debug		// debug it via qemu & gdb, you'd start gdb to connect it.
+```
+```gdb
+$ gdb tools/system
+(gdb) target remote :1234
+(gdb) b main
+(gdb) c
 ```
 
 ## 2. Build on Mac OS X
@@ -35,24 +36,22 @@ The old Linux kernel source ver 0.11 which has been tested under modern Linux,  
 * a linux-0.11 hardware image file: hdc-0.11.img
 
 ```bash
-    $ sudo port install qemu
-    $ sudo port install i386-elf-binutils i386-elf-gcc
+$ sudo port install qemu
+$ sudo port install i386-elf-binutils i386-elf-gcc
 ```
 
 optional
 ```bash
-    $ wget ftp://ftp.gnu.org/gnu/gdb/gdb-7.4.tar.bz2
-    $ tar -xzvf gdb-7.4.tar.bz2
-	$ cd gdb-7.4
-	$ ./configure --target=i386-elf
-	$ make
+$ wget ftp://ftp.gnu.org/gnu/gdb/gdb-7.4.tar.bz2
+$ tar -xzvf gdb-7.4.tar.bz2
+$ cd gdb-7.4
+$ ./configure --target=i386-elf
+$ make
 ```
 
 ## 2.2. hack linux-0.11
-
-	same as section 1.2
+same as section 1.2
 
 
 ## 3. Build on Windows
-
-	todo...
+todo...
