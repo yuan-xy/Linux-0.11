@@ -7,7 +7,7 @@ CALLTREE=$(shell find tools/ -name "calltree" -perm 755 -type f)
 
 # indicate the path of the bochs
 #BOCHS=$(shell find tools/ -name "bochs" -perm 755 -type f)
-BOCHS=tools/bochs-2.6.9/bochs
+BOCHS=$(shell find tools/bochs-2.6.9 -name "bochs" -perm 755 -type f)
 
 #
 # if you want the ram-disk device, define this to be the
@@ -49,13 +49,8 @@ ifeq ($(HOST),$(info host: $(UNAME)))
 endif
 
 Image: boot/bootsect boot/setup tools/system
-#	@cp -f tools/system tools/system.tmp
-#	@$(STRIP) tools/system.tmp
-#	@$(OBJCOPY) -O binary -R .note -R .comment tools/system.tmp tools/kernel
 	@$(OBJCOPY) -O binary -S -g -R .note -R .comment tools/system tools/kernel
 	@tools/build.sh boot/bootsect boot/setup tools/kernel Image $(ROOT_DEV)
-#	@rm tools/system.tmp
-	@rm -f tools/kernel
 	@sync
 
 disk: Image
@@ -72,8 +67,8 @@ tools/system:	boot/head.o init/main.o \
 	$(MATH) \
 	$(LIBS) \
 	-o tools/system
-	@nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aU] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > tools/System.map
-	@objdump -S tools/system > tools/system.s
+	@nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aUN] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > System.map
+	@objdump -S tools/system > System.s
 
 kernel/math/math.a:
 	@make -C kernel/math
@@ -108,8 +103,8 @@ tmp.s:	boot/bootsect.s tools/system
 	@cat boot/bootsect.s >> tmp.s
 
 clean:
-	@rm -f Image tools/system.s tools/System.map tmp_make core boot/bootsect boot/setup
-	@rm -f init/*.o tools/system boot/*.o typescript* info bochsout.txt
+	@rm -f Image System.s System.map tmp_make core boot/bootsect boot/setup
+	@rm -f init/*.o tools/system tools/kernel boot/*.o typescript* info bochsout.txt
 	@for i in mm fs kernel lib boot; do make clean -C $$i; done 
 info:
 	@make clean
@@ -151,13 +146,13 @@ bochs-debug:
 
 bochs:
 ifeq ($(BOCHS),)
-	@(cd tools/bochs-2.6.9; \
+	@(cd tools/bochs-2.6.9/bochs-2.6.9; \
 	./configure --enable-plugins --enable-disasm --enable-gdb-stub;\
 	make)
 endif
 
 bochs-clean:
-	@make clean -C tools/bochs-2.6.9
+	@make clean -C tools/bochs-2.6.9/bochs-2.6.9
 
 calltree:
 ifeq ($(CALLTREE),)
