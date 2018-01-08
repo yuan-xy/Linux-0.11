@@ -1,0 +1,44 @@
+0. download bochs 2.6.9 source code
+search at sourceforge.net/projects/bochs/files/bochs/2.6.9/ and download it here, and then decompress it.
+
+
+1. compile on Linux
+a). compile with gdbstub to support GDB:
+$ cd bochs-2.6.9
+*************************************************************************************************************
+    You may recive message "Program received signal SIGSEGV, Segmentation fault." frequently and GDB will stop.
+    Then you can solve it by modifying gdbstub.cc:
+    1.find all code below
+        if (last_stop_reason == GDBSTUB_EXECUTION_BREAKPOINT || last_stop_reason == GDBSTUB_TRACE)
+        {
+            write_signal(&buf[1], SIGTRAP);
+        }
+    2.append the following code
+        else if (last_stop_reason == GDBSTUB_STOP_NO_REASON)
+        {
+            write_signal(&buf[1], SIGSEGV);
+        }
+*************************************************************************************************************
+$ ./configure --enable-debugger-gui --enable-gdb-stub --enable-plugins
+$ make
+$ sudo cp bochs /usr/local/bin/
+b). compile to bochs debug:
+$ ./configure --enable-debugger-gui --enable-debugger --enable-x86-debugger --enable-disasm
+$ make
+$ sudo cp bochs /usr/local/bin/bochsdbg
+
+
+2. start kernel in bochs
+$ bochs -q -f ../bochrc-hd.bxrc
+
+
+3. debug kernel with bochs gdbstub
+$ bochs -q -f ../bochrc-hd-gdb.bxrc
+and then start the gdb to connect the 1234 port
+$ cd linux-0.11
+$ gdb -q ../../../tools/system
+(gdb) handle SIGSEGV nostop noprint nopass
+(gdb) break main
+(gdb) target remote :1234
+(gdb) s
+(gdb) ...

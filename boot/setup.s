@@ -1,5 +1,12 @@
 	.code16
 # rewrite with AT&T syntax by falcon <wuzhangjin@gmail.com> at 081012
+# Modified by hat <hathatehack@gmail.com> at 2017
+#
+# SYS_SIZE is the number of clicks (16 bytes) to be loaded.
+# 0x3000 is 0x30000 bytes = 196kB, more than enough for current
+# versions of linux
+#
+	.equ SYSSIZE, 0x3000
 #
 #	setup.s		(C) 1991 Linus Torvalds
 #
@@ -29,12 +36,9 @@
 	begbss:
 	.text
 
-	ljmp $SETUPSEG, $_start	
 _start:
 	mov %cs,%ax
-	mov %ax,%ds
 	mov %ax,%es
-#
 ##print some message
 #
 	mov $0x03, %ah
@@ -46,14 +50,10 @@ _start:
 	mov $msg2,%bp
 	mov $0x1301, %ax
 	int $0x10
-# ok, the read went well so we get current cursor position and save it for
-# posterity.
-	mov	$INITSEG, %ax	# this is done in bootsect already, but...
-	mov	%ax, %ds
-	mov	$0x03, %ah	# read cursor pos
-	xor	%bh, %bh
-	int	$0x10		# save it in known place, con_init fetches
-	mov	%dx, %ds:0	# it from 0x90000.
+
+
+#	mov	$INITSEG, %ax	# this is done in bootsect already, but...
+#	mov	%ax, %ds
 # Get memory size (extended mem, kB)
 
 	mov	$0x88, %ah 
@@ -100,25 +100,11 @@ _start:
 	rep
 	movsb
 
-## modify ds
+## modify ds,es
 	mov $INITSEG,%ax
 	mov %ax,%ds
 	mov $SETUPSEG,%ax
 	mov %ax,%es
-
-##show cursor pos:
-	mov $0x03, %ah 
-	xor %bh,%bh
-	int $0x10
-	mov $11,%cx
-	mov $0x000c,%bx
-	mov $cur,%bp
-	mov $0x1301,%ax
-	int $0x10
-##show detail
-	mov %ds:0 ,%ax
-	call print_hex
-	call print_nl
 
 ##show memory size
 	mov $0x03, %ah
@@ -175,9 +161,17 @@ _start:
 	mov %ds:0x8e, %ax
 	call print_hex
 	call print_nl
-#l:
-#	jmp l
-##
+
+# ok, the read went well so we get current cursor position and save it for
+# posterity.
+#	mov	$INITSEG, %ax	# this is done in bootsect already, but...
+#	mov	%ax, %ds
+	mov	$0x03, %ah	# read cursor pos
+	xor	%bh, %bh
+	int	$0x10		# save it in known place, con_init fetches
+	mov	%dx, %ds:0	# it from 0x90000.
+
+
 # Check that there IS a hd1 :-)
 
 	mov	$0x01500, %ax
@@ -207,7 +201,7 @@ is_disk1:
 do_move:
 	mov	%ax, %es	# destination segment
 	add	$0x1000, %ax
-	cmp	$0x9000, %ax
+	cmp	$0x1000+SYSSIZE, %ax
 	jz	end_move
 	mov	%ax, %ds	# source segment
 	sub	%di, %di
@@ -324,10 +318,10 @@ gdt_48:
 	.word	0x800			# gdt limit=2048, 256 GDT entries
 	.word   512+gdt, 0x9		# gdt base = 0X9xxxx, 
 	# 512+gdt is the real gdt after setup is moved to 0x9020 * 0x10
+
 print_hex:
 	mov $4,%cx
 	mov %ax,%dx
-
 print_digit:
 	rol $4,%dx	#循环以使低4位用上，高4位移至低4位
 	mov $0xe0f,%ax #ah ＝ 请求的功能值，al = 半个字节的掩码
@@ -336,7 +330,6 @@ print_digit:
 	cmp $0x3a,%al
 	jl outp
 	add $0x07,%al
-
 outp:
 	int $0x10
 	loop print_digit
