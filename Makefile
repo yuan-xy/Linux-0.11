@@ -1,4 +1,3 @@
-OS = Mac
 
 # indicate the Hardware Image file
 HDA_IMG = hdc-0.11.img
@@ -8,7 +7,7 @@ CALLTREE=$(shell find tools/ -name "calltree" -perm 755 -type f)
 
 # indicate the path of the bochs
 #BOCHS=$(shell find tools/ -name "bochs" -perm 755 -type f)
-BOCHS=bochs
+BOCHS=$(shell find tools/bochs-2.6.9 -name "bochs" -perm 755 -type f)
 
 #
 # if you want the ram-disk device, define this to be the
@@ -42,15 +41,16 @@ LIBS	=lib/lib.a
 .c.o:
 	@$(CC) $(CFLAGS) -c -o $*.o $<
 
-all:	Image	
+all: host_check Image
+
+host_check:
+ifeq ($(HOST),$(info host: $(UNAME)))
+	$(error "Support only on Linux, Darwin, Cygwin, Mingw!")
+endif
 
 Image: boot/bootsect boot/setup tools/system
-	@cp -f tools/system system.tmp
-	@$(STRIP) system.tmp
-	@$(OBJCOPY) -O binary -R .note -R .comment system.tmp tools/kernel
+	@$(OBJCOPY) -O binary -S -g -R .note -R .comment tools/system tools/kernel
 	@tools/build.sh boot/bootsect boot/setup tools/kernel Image $(ROOT_DEV)
-	@rm system.tmp
-	@rm -f tools/kernel
 	@sync
 
 disk: Image
@@ -66,8 +66,9 @@ tools/system:	boot/head.o init/main.o \
 	$(DRIVERS) \
 	$(MATH) \
 	$(LIBS) \
-	-o tools/system 
-	@nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aU] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > System.map 
+	-o tools/system
+	@nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aUN] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > System.map
+	@objdump -S tools/system > System.s
 
 kernel/math/math.a:
 	@make -C kernel/math
@@ -102,8 +103,8 @@ tmp.s:	boot/bootsect.s tools/system
 	@cat boot/bootsect.s >> tmp.s
 
 clean:
-	@rm -f Image System.map tmp_make core boot/bootsect boot/setup
-	@rm -f init/*.o tools/system boot/*.o typescript* info bochsout.txt
+	@rm -f Image System.s System.map tmp_make core boot/bootsect boot/setup
+	@rm -f init/*.o tools/system tools/kernel boot/*.o typescript* info bochsout.txt
 	@for i in mm fs kernel lib boot; do make clean -C $$i; done 
 info:
 	@make clean
@@ -138,21 +139,20 @@ start:
 	@qemu-system-x86_64 -m 16M -boot a -fda Image -hda $(HDA_IMG)
 
 debug:
-	@echo $(OS)
 	@qemu-system-x86_64 -m 16M -boot a -fda Image -hda $(HDA_IMG) -s -S
 
 bochs-debug:
-	@$(BOCHS) -q -f tools/bochs/bochsrc/bochsrc-hd-dbg.bxrc	
+	@$(BOCHS) -q -f tools/bochs-2.6.9/bochsrc-hd-gdb.bxrc
 
 bochs:
 ifeq ($(BOCHS),)
-	@(cd tools/bochs/bochs-2.3.7; \
+	@(cd tools/bochs-2.6.9/bochs-2.6.9; \
 	./configure --enable-plugins --enable-disasm --enable-gdb-stub;\
 	make)
 endif
 
 bochs-clean:
-	@make clean -C tools/bochs/bochs-2.3.7
+	@make clean -C tools/bochs-2.6.9/bochs-2.6.9
 
 calltree:
 ifeq ($(CALLTREE),)
@@ -198,6 +198,9 @@ help:
 	@echo "     used in ubuntu|debian 32bit|64bit with gcc 4.3.2, and give some new "
 	@echo "     features for experimenting. such as this help info, boot/bootsect.s and"
 	@echo "     boot/setup.s with AT&T rewritting, porting to gcc 4.3.2 :-)"
+	@echo "     * 2017, hat<hathatehack@gmail.com> release a new version turn on -O and"
+	@echo "     support gcc 4/5/6/7 and Cygwin/Mingw(make sure ld version ISN'T 2.25.x!!"
+	@echo "     See at stackoverflow.com/questions/48088518/ld-ttext-0-m-i386pe-relocation-wrong-on-cygwin"
 	@echo ""
 	@echo "<<<Be Happy To Play With It :-)>>>"
 

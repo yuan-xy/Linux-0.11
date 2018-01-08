@@ -188,58 +188,41 @@ __asm__("cmpl %%ecx,current\n\t" \
 #define PAGE_ALIGN(n) (((n)+0xfff)&0xfffff000)
 
 #define _set_base(addr,base)  \
-__asm__ ("push %%edx\n\t" \
-	"movw %%dx,%0\n\t" \
-	"rorl $16,%%edx\n\t" \
-	"movb %%dl,%1\n\t" \
-	"movb %%dh,%2\n\t" \
-	"pop %%edx" \
+__asm__ ("movw %w3,%0\n\t" \
+	"rorl $16,%3\n\t" \
+	"movb %b3,%1\n\t" \
+	"movb %h3,%2\n\t" \
+	"rorl $16,%3\n\t" \
 	::"m" (*((addr)+2)), \
 	 "m" (*((addr)+4)), \
 	 "m" (*((addr)+7)), \
-	 "d" (base) \
+	 "q" (base) \
 	)
 
 #define _set_limit(addr,limit) \
-__asm__ ("push %%edx\n\t" \
-	"movw %%dx,%0\n\t" \
-	"rorl $16,%%edx\n\t" \
-	"movb %1,%%dh\n\t" \
-	"andb $0xf0,%%dh\n\t" \
-	"orb %%dh,%%dl\n\t" \
-	"movb %%dl,%1\n\t" \
-	"pop %%edx" \
+__asm__ ("movw %w2,%0\n\t" \
+	"rorl $16,%2\n\t" \
+	"movb %1,%h2\n\t" \
+	"andb $0xf0,%h2\n\t" \
+	"orb %h2,%b2\n\t" \
+	"movb %b2,%1\n\t" \
+	"rorl $16,%2\n\t" \
 	::"m" (*(addr)), \
 	 "m" (*((addr)+6)), \
-	 "d" (limit) \
+	 "q" (limit) \
 	)
 
 #define set_base(ldt,base) _set_base( ((char *)&(ldt)) , (base) )
 #define set_limit(ldt,limit) _set_limit( ((char *)&(ldt)) , (limit-1)>>12 )
 
-/**
-#define _get_base(addr) ({\
-unsigned long __base; \
-__asm__("movb %3,%%dh\n\t" \
-	"movb %2,%%dl\n\t" \
-	"shll $16,%%edx\n\t" \
-	"movw %1,%%dx" \
-	:"=d" (__base) \
-	:"m" (*((addr)+2)), \
-	 "m" (*((addr)+4)), \
-	 "m" (*((addr)+7)) \
-        :"memory"); \
-__base;})
-**/
-
 static inline unsigned long _get_base(char * addr)
 {
          unsigned long __base;
-         __asm__("movb %3,%%dh\n\t"
-                 "movb %2,%%dl\n\t"
-                 "shll $16,%%edx\n\t"
-                 "movw %1,%%dx"
-                 :"=&d" (__base)
+         __asm__("movb %3,%h0\n\t"
+                 "movb %2,%b0\n\t"
+                 "shll $16,%0\n\t"
+                 "movw %1,%w0"
+                 :"=&q" (__base)
                  :"m" (*((addr)+2)),
                   "m" (*((addr)+4)),
                   "m" (*((addr)+7)));

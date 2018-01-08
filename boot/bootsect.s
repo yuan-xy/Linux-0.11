@@ -1,5 +1,6 @@
 	.code16
 # rewrite with AT&T syntax by falcon <wuzhangjin@gmail.com> at 081012
+# Modified by hat <hathatehack@gmail.com> at 2017
 #
 # SYS_SIZE is the number of clicks (16 bytes) to be loaded.
 # 0x3000 is 0x30000 bytes = 196kB, more than enough for current
@@ -44,13 +45,12 @@
 #		0x301 - first partition on first drive etc
 #
 ##和源码不同，源码中是0x306 第2块硬盘的第一个分区
-#
-	.equ ROOT_DEV, 0x301
-	ljmp    $BOOTSEG, $_start
+.equ ROOT_DEV, 0x301
+
 _start:
 	mov	$BOOTSEG, %ax	#将ds段寄存器设置为0x7C0
 	mov	%ax, %ds
-	mov	$INITSEG, %ax	#将es段寄存器设置为0x900
+	mov	$INITSEG, %ax	#将es段寄存器设置为0x9000
 	mov	%ax, %es
 	mov	$256, %cx		#设置移动计数值256字
 	sub	%si, %si		#源地址	ds:si = 0x07C0:0x0000
