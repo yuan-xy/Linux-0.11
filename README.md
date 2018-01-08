@@ -8,9 +8,9 @@ The old Linux kernel source ver 0.11 which has been tested under modern Linux,  
 ### 1.1. Linux Setup
 
 * a linux distribution: debian , ubuntu and mint are recommended
-* some tools: gcc gdb qemu
+* some tools: gcc gdb qemu (or bochs)
 * a linux-0.11 hardware image file: hdc-0.11.img, please download it from http://www.oldlinux.org, or http://mirror.lzu.edu.cn/os/oldlinux.org/, ant put it in the root directory.
-* Now, This version already support the Ubuntu 16.04, enjoy it.
+* Now, This version already support gcc 4/5/6/7 series and turn on -O, enjoy it.
 
 ### 1.2. hack linux-0.11
 ```bash
@@ -54,4 +54,6 @@ same as section 1.2
 
 
 ## 3. Build on Windows
-todo...
+* Support gcc 4/5/6/7 series and turn on -O on Cygwin and Mingw. BUT make sure ld version is NOT 2.25.x !! See problem description at
+  https://stackoverflow.com/questions/48088518/ld-ttext-0-m-i386pe-relocation-wrong-on-cygwin
+

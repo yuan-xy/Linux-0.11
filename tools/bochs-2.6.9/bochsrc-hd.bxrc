@@ -1,0 +1,8 @@
+
+romimage: file=$BXSHARE/BIOS-bochs-latest
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+megs: 16
+floppya: 1_44="Image", status=inserted
+ata0-master: type=disk, path="hdc-0.11.img", mode=flat, cylinders=410, heads=16, spt=38
+boot: a
+cpu: ips=15000000
