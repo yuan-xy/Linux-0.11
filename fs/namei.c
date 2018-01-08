@@ -68,9 +68,13 @@ static int match(int len,const char * name,struct dir_entry * de)
 		return 0;
 	if (len < NAME_LEN && de->name[len])
 		return 0;
-	__asm__("cld\n\t"
+	__asm__("push %%esi\n\t"
+			"push %%edi\n\t"
+		"cld\n\t"
 		"fs ; repe ; cmpsb\n\t"
-		"setz %%al"
+		"setz %%al\n\t"
+		"pop %%edi\n\t"
+		"pop %%esi\n\t"
 		:"=a" (same)
 		:"0" (0),"S" ((long) name),"D" ((long) de->name),"c" (len)
 		);

@@ -1,13 +1,45 @@
 UNAME := $(shell uname)
+HOST := $(word 1, $(filter Linux Darwin CYGWIN MINGW, \
+          $(patsubst MINGW%,MINGW,$(UNAME)) $(patsubst CYGWIN%,CYGWIN,$(UNAME))))
 
-ifeq ($(UNAME), Linux)
+ifeq ($(HOST), Linux)
 	AS	= as --32
 	LD	= ld
 	#LDFLAGS = -m elf_i386 -x 
 	LDFLAGS = -m elf_i386
 	CC	= gcc
-	CFLAGS  = -g -m32 -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
+	CFLAGS  = -m32 -g -O -finline-functions -nostdinc -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
+	CPP	= cpp -nostdinc
+	AR	= ar
+	STRIP = strip
+	OBJCOPY = objcopy
+	# we should use -fno-stack-protector with gcc 4.3
+	gcc_version=$(shell ls -l `which gcc` | tr '-' '\n' | tail -1)
 
+else
+ifeq ($(HOST), Darwin)
+	AS	= i386-elf-as --32
+	LD	= i386-elf-ld
+	#LDFLAGS = -m elf_i386 -x 
+	LDFLAGS = -m elf_i386
+	#CC	= i386-elf-gcc-4.3.2
+	CC	= i386-elf-gcc
+	CFLAGS  = -gdwarf-2 -g3 -m32 -finline-functions -nostdinc -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
+
+	#CPP	= i386-elf-cpp-4.3.2 -nostdinc
+	CPP	= i386-elf-cpp -nostdinc
+	AR	=i386-elf-ar
+	STRIP = i386-elf-strip
+	OBJCOPY = i386-elf-objcopy
+
+else
+ifneq ($(filter CYGWIN MINGW, $(HOST)),)
+	AS	= as --32
+	LD	= ld
+	#LDFLAGS = -m i386pe -x 
+	LDFLAGS = -m i386pe
+	CC	= gcc
+	CFLAGS  = -m32 -g -O -finline-functions -nostdinc -fno-leading-underscore -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
 	CPP	= cpp -nostdinc
 	AR	= ar
 	STRIP = strip
@@ -15,23 +47,6 @@ ifeq ($(UNAME), Linux)
 	# we should use -fno-stack-protector with gcc 4.3
 	gcc_version=$(shell ls -l `which gcc` | tr '-' '\n' | tail -1)
 endif
-
-
-
-ifeq ($(UNAME), Darwin)
-	AS	= i386-elf-as --32
-	LD	= i386-elf-ld
-	#LDFLAGS = -m elf_i386 -x 
-	LDFLAGS = -m elf_i386
-	#CC	= i386-elf-gcc-4.3.2
-	CC	= i386-elf-gcc
-	CFLAGS  = -gdwarf-2 -g3 -m32 -fno-builtin -fno-stack-protector -fomit-frame-pointer -fstrength-reduce #-Wall
-
-	#CPP	= i386-elf-cpp-4.3.2 -nostdinc
-	CPP	= i386-elf-cpp -nostdinc
-	AR	=i386-elf-ar
-	STRIP = i386-elf-strip
-	OBJCOPY = i386-elf-objcopy
 endif
-
+endif
 

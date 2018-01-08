@@ -284,9 +284,13 @@ struct buffer_head * bread(int dev,int block)
 }
 
 #define COPYBLK(from,to) \
-__asm__("cld\n\t" \
+__asm__("push %%esi\n\t" \
+        "push %%edi\n\t" \
+    "cld\n\t" \
 	"rep\n\t" \
 	"movsl\n\t" \
+	"pop %%edi\n\t" \
+    "pop %%esi" \
 	::"c" (BLOCK_SIZE/4),"S" (from),"D" (to) \
 	)
 
@@ -296,7 +300,7 @@ __asm__("cld\n\t" \
  * all at the same time, not waiting for one to be read, and then another
  * etc.
  */
-void bread_page(unsigned long address,int dev,int b[4])
+void bread_page(volatile unsigned long address,int dev,int b[4])
 {
 	struct buffer_head * bh[4];
 	int i;
