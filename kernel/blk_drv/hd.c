@@ -59,10 +59,10 @@ static struct hd_struct {
 } hd[5*MAX_HD]={{0,0},};
 
 #define port_read(port,buf,nr) \
-__asm__("cld;rep;insw"::"d" (port),"D" (buf),"c" (nr))
+__asm__("push %%edi;" "cld;rep;insw" ";pop %%edi"::"d" (port),"D" (buf),"c" (nr))
 
 #define port_write(port,buf,nr) \
-__asm__("cld;rep;outsw"::"d" (port),"S" (buf),"c" (nr))
+__asm__("push %%esi;" "cld;rep;outsw" ";pop %%esi"::"d" (port),"S" (buf),"c" (nr))
 
 extern void hd_interrupt(void);
 extern void rd_load(void);

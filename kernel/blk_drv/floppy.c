@@ -153,7 +153,7 @@ repeat:
 }
 
 #define copy_buffer(from,to) \
-__asm__("cld ; rep ; movsl" \
+__asm__("push %%esi; push %%edi;" "cld ; rep ; movsl" ";pop %%edi; pop %%esi" \
 	::"c" (BLOCK_SIZE/4),"S" ((long)(from)),"D" ((long)(to)) \
 	)
 

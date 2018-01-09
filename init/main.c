@@ -20,12 +20,12 @@
  * won't be any messing with the stack from main(), but we define
  * some others too.
  */
-static inline fork(void) __attribute__((always_inline));
-static inline pause(void) __attribute__((always_inline));
-static inline _syscall0(int,fork)
-static inline _syscall0(int,pause)
-static inline _syscall1(int,setup,void *,BIOS)
-static inline _syscall0(int,sync)
+inline _syscall0(int,fork) __attribute__((always_inline))
+inline _syscall0(int,pause) __attribute__((always_inline))
+inline _syscall1(int,setup,void *,BIOS)
+inline _syscall0(int,sync)
+
+void __main(void) {}; //This's for Cygwin/Mingw.
 
 #include <linux/tty.h>
 #include <linux/sched.h>
@@ -179,6 +179,7 @@ void init(void)
 	printf("%d buffers = %d bytes buffer space\n\r",NR_BUFFERS,
 		NR_BUFFERS*BLOCK_SIZE);
 	printf("Free mem: %d bytes\n\r",memory_end-main_memory_start);
+    
 	if (!(pid=fork())) {
 		close(0);
 		if (open("/etc/rc",O_RDONLY,0))
