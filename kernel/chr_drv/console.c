@@ -113,12 +113,16 @@ static void scrup(void)
 			pos += video_size_row;
 			scr_end += video_size_row;
 			if (scr_end > video_mem_end) {
-				__asm__("cld\n\t"
+                __asm__("push %%esi\n\t"
+                        "push %%edi\n\t"
+		            "cld\n\t"
 					"rep\n\t"
 					"movsl\n\t"
 					"movl video_num_columns,%1\n\t"
 					"rep\n\t"
-					"stosw"
+					"stosw\n\t"
+                	"pop %%edi\n\t"
+                    "pop %%esi"
 					::"a" (video_erase_char),
 					"c" ((video_num_lines-1)*video_num_columns>>1),
 					"D" (video_mem_start),
@@ -128,9 +132,11 @@ static void scrup(void)
 				pos -= origin-video_mem_start;
 				origin = video_mem_start;
 			} else {
-				__asm__("cld\n\t"
+                __asm__("push %%edi\n\t"
+		            "cld\n\t"
 					"rep\n\t"
-					"stosw"
+					"stosw\n\t"
+                	"pop %%edi"
 					::"a" (video_erase_char),
 					"c" (video_num_columns),
 					"D" (scr_end-video_size_row)
@@ -138,12 +144,16 @@ static void scrup(void)
 			}
 			set_origin();
 		} else {
-			__asm__("cld\n\t"
+            __asm__("push %%esi\n\t"
+                    "push %%edi\n\t"
+		        "cld\n\t"
 				"rep\n\t"
 				"movsl\n\t"
 				"movl video_num_columns,%%ecx\n\t"
 				"rep\n\t"
-				"stosw"
+				"stosw\n\t"
+            	"pop %%edi\n\t"
+                "pop %%esi"
 				::"a" (video_erase_char),
 				"c" ((bottom-top-1)*video_num_columns>>1),
 				"D" (origin+video_size_row*top),
@@ -153,12 +163,16 @@ static void scrup(void)
 	}
 	else		/* Not EGA/VGA */
 	{
-		__asm__("cld\n\t"
+        __asm__("push %%esi\n\t"
+                "push %%edi\n\t"
+		    "cld\n\t"
 			"rep\n\t"
 			"movsl\n\t"
 			"movl video_num_columns,%%ecx\n\t"
 			"rep\n\t"
-			"stosw"
+			"stosw\n\t"
+        	"pop %%edi\n\t"
+            "pop %%esi"
 			::"a" (video_erase_char),
 			"c" ((bottom-top-1)*video_num_columns>>1),
 			"D" (origin+video_size_row*top),
@@ -171,13 +185,17 @@ static void scrdown(void)
 {
 	if (video_type == VIDEO_TYPE_EGAC || video_type == VIDEO_TYPE_EGAM)
 	{
-		__asm__("std\n\t"
+        __asm__("push %%esi\n\t"
+                "push %%edi\n\t"
+            "std\n\t"
 			"rep\n\t"
 			"movsl\n\t"
 			"addl $2,%%edi\n\t"	/* %edi has been decremented by 4 */
 			"movl video_num_columns,%%ecx\n\t"
 			"rep\n\t"
-			"stosw"
+			"stosw\n\t"
+        	"pop %%edi\n\t"
+            "pop %%esi"
 			::"a" (video_erase_char),
 			"c" ((bottom-top-1)*video_num_columns>>1),
 			"D" (origin+video_size_row*bottom-4),
@@ -186,13 +204,17 @@ static void scrdown(void)
 	}
 	else		/* Not EGA/VGA */
 	{
-		__asm__("std\n\t"
+        __asm__("push %%esi\n\t"
+                "push %%edi\n\t"
+            "std\n\t"
 			"rep\n\t"
 			"movsl\n\t"
 			"addl $2,%%edi\n\t"	/* %edi has been decremented by 4 */
 			"movl video_num_columns,%%ecx\n\t"
 			"rep\n\t"
-			"stosw"
+			"stosw\n\t"
+        	"pop %%edi\n\t"
+            "pop %%esi"
 			::"a" (video_erase_char),
 			"c" ((bottom-top-1)*video_num_columns>>1),
 			"D" (origin+video_size_row*bottom-4),
@@ -257,9 +279,11 @@ static void csi_J(int par)
 		default:
 			return;
 	}
-	__asm__("cld\n\t"
+    __asm__("push %%edi\n\t"
+		"cld\n\t"
 		"rep\n\t"
 		"stosw\n\t"
+    	"pop %%edi"
 		::"c" (count),
 		"D" (start),"a" (video_erase_char)
 		);
@@ -288,9 +312,11 @@ static void csi_K(int par)
 		default:
 			return;
 	}
-	__asm__("cld\n\t"
+    __asm__("push %%edi\n\t"
+		"cld\n\t"
 		"rep\n\t"
 		"stosw\n\t"
+    	"pop %%edi"
 		::"c" (count),
 		"D" (start),"a" (video_erase_char)
 		);
@@ -458,9 +484,9 @@ void con_write(struct tty_struct * tty)
 						pos -= video_size_row;
 						lf();
 					}
-					__asm__("movb attr,%%ah\n\t"
+					__asm__("movb %2,%%ah\n\t"
 						"movw %%ax,%1\n\t"
-						::"a" (c),"m" (*(short *)pos)
+						::"a" (c),"m" (*(short *)pos),"m" (attr)
 						);
 					pos += 2;
 					x++;
