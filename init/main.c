@@ -179,6 +179,13 @@ void init(void)
 	printf("%d buffers = %d bytes buffer space\n\r",NR_BUFFERS,
 		NR_BUFFERS*BLOCK_SIZE);
 	printf("Free mem: %d bytes\n\r",memory_end-main_memory_start);
+
+	printf("\n------------------------------------\n");
+	printf("buffer_memory_end is %d\n\r", buffer_memory_end); /* 4194304 = 4*1024*1024 */
+	printf("main_memory_start is %d\n\r", main_memory_start); /* 4194304 = 4*1024*1024 */
+	printf("memory_end is %d\n\r", memory_end); /* 16646144 = 1*1024*1024 + 14.875*1024*1024 */
+	printf("\n------------------------------------\n");
+
 	if (!(pid=fork())) {
 		close(0);
 		if (open("/etc/rc",O_RDONLY,0))

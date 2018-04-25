@@ -178,6 +178,9 @@ void do_reserved(long esp, long error_code)
 	die("reserved (15,17-47) error",esp,error_code);
 }
 
+/* CPU在参与运算过程中，可能会遇到除零错误、溢出错误、边界检查错误、缺页错误……，因此需要异常处理 */
+/* 系统调用就是利用中断技术实现的 */
+/* 将中断、异常处理的服务程序与IDT进行挂接，建立中断服务体系 */
 void trap_init(void)
 {
 	int i;
