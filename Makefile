@@ -113,9 +113,9 @@ info:
 
 distclean: clean
 	@rm -f tag cscope* linux-0.11.* $(CALLTREE)
-	@(find tools/calltree-2.3 -name "*.o" | xargs -i rm -f {})
-	@make clean -C tools/calltree-2.3
-	@make clean -C tools/bochs/bochs-2.3.7
+	@if [ -d tools/calltree-2.3 ]; then find tools/calltree-2.3 -name "*.o" | xargs -i rm -f {}; fi
+	@if [ -d tools/calltree-2.3 ]; then make clean -C tools/calltree-2.3; fi
+	@if [ -d tools/bochs/bochs-2.3.7 ]; then make clean -C tools/bochs/bochs-2.3.7; fi
 
 backup: clean
 	@(cd .. ; tar cf - linux | compress16 - > backup.Z)
