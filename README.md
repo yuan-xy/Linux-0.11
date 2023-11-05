@@ -21,7 +21,7 @@ $ make debug		// debug it via qemu & gdb, you'd start gdb to connect it.
 ```
 ```gdb
 $ gdb tools/system
-(gdb) set arch i386:x86-64
+(gdb) set arch i386:x86-64 
 (gdb) target remote :1234
 (gdb) b main
 (gdb) c
