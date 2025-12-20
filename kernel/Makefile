@@ -18,7 +18,7 @@ LDFLAGS	+= -r
 # compling procedure of it, it's not good too. for playing with linux-0.11, we
 # just have fun, have no much concerning about the performance.
 
-CFLAGS	+= -I../include
+CFLAGS += -I../include -std=gnu89
 
 CPP	+= -I../include
 
