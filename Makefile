@@ -19,30 +19,35 @@ RAMDISK =  #-DRAMDISK=512
 # This is a basic Makefile for setting the general configuration
 include Makefile.header
 
-LDFLAGS	+= -Ttext 0 -e startup_32
-CFLAGS	+= $(RAMDISK) -Iinclude
-CPP	+= -Iinclude
+LDFLAGS += -Ttext 0 -e startup_32
+
+# Global C flags (GCC15 compatibility + project includes)
+CFLAGS  += $(RAMDISK) -Iinclude \
+           -std=gnu89 -fno-pic \
+           -Wno-incompatible-pointer-types -Wno-strict-prototypes
+
+CPP     += -Iinclude
 
 #
 # ROOT_DEV specifies the default root-device when making the image.
 # This can be either FLOPPY, /dev/xxxx or empty, in which case the
 # default of /dev/hd6 is used by 'build'.
 #
-ROOT_DEV= #FLOPPY 
+ROOT_DEV= #FLOPPY
 
-ARCHIVES=kernel/kernel.o mm/mm.o fs/fs.o
-DRIVERS =kernel/blk_drv/blk_drv.a kernel/chr_drv/chr_drv.a
-MATH	=kernel/math/math.a
-LIBS	=lib/lib.a
+ARCHIVES = kernel/kernel.o mm/mm.o fs/fs.o
+DRIVERS  = kernel/blk_drv/blk_drv.a kernel/chr_drv/chr_drv.a
+MATH     = kernel/math/math.a
+LIBS     = lib/lib.a
 
 .c.s:
 	@$(CC) $(CFLAGS) -S -o $*.s $<
 .s.o:
-	@$(AS)  -o $*.o $<
+	@$(AS) -o $*.o $<
 .c.o:
 	@$(CC) $(CFLAGS) -c -o $*.o $<
 
-all:	Image	
+all: Image
 
 Image: boot/bootsect boot/setup tools/system
 	@cp -f tools/system system.tmp
@@ -59,15 +64,15 @@ disk: Image
 boot/head.o: boot/head.s
 	@make head.o -C boot/
 
-tools/system:	boot/head.o init/main.o \
+tools/system: boot/head.o init/main.o \
 		$(ARCHIVES) $(DRIVERS) $(MATH) $(LIBS)
 	@$(LD) $(LDFLAGS) boot/head.o init/main.o \
 	$(ARCHIVES) \
 	$(DRIVERS) \
 	$(MATH) \
 	$(LIBS) \
-	-o tools/system 
-	@nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aU] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > System.map 
+	-o tools/system
+	@nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aU] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)' | sort > System.map
 
 kernel/math/math.a:
 	@make -C kernel/math
@@ -96,15 +101,16 @@ boot/setup: boot/setup.s
 boot/bootsect: boot/bootsect.s
 	@make bootsect -C boot
 
-tmp.s:	boot/bootsect.s tools/system
-	@(echo -n "SYSSIZE = (";ls -l tools/system | grep system \
+tmp.s: boot/bootsect.s tools/system
+	@(echo -n "SYSSIZE = ("; ls -l tools/system | grep system \
 		| cut -c25-31 | tr '\012' ' '; echo "+ 15 ) / 16") > tmp.s
 	@cat boot/bootsect.s >> tmp.s
 
 clean:
 	@rm -f Image System.map tmp_make core boot/bootsect boot/setup
 	@rm -f init/*.o tools/system boot/*.o typescript* info bochsout.txt
-	@for i in mm fs kernel lib boot; do make clean -C $$i; done 
+	@for i in mm fs kernel lib boot; do make clean -C $$i; done
+
 info:
 	@make clean
 	@script -q -c "make all"
@@ -123,7 +129,7 @@ backup: clean
 
 dep:
 	@sed '/\#\#\# Dependencies/q' < Makefile > tmp_make
-	@(for i in init/*.c;do echo -n "init/";$(CPP) -M $$i;done) >> tmp_make
+	@(for i in init/*.c; do echo -n "init/"; $(CPP) -M $$i; done) >> tmp_make
 	@cp tmp_make Makefile
 	@for i in fs kernel mm; do make dep -C $$i; done
 
@@ -135,19 +141,19 @@ cscope:
 	@cscope -Rbkq
 
 start:
-	@qemu-system-x86_64 -m 16M -boot a -fda Image -hda $(HDA_IMG)
+	@qemu-system-i386 -m 16M -boot a -fda Image -hda $(HDA_IMG)
 
 debug:
 	@echo $(OS)
-	@qemu-system-x86_64 -m 16M -boot a -fda Image -hda $(HDA_IMG) -s -S
+	@qemu-system-i386 -m 16M -boot a -fda Image -hda $(HDA_IMG) -s -S
 
 bochs-debug:
-	@$(BOCHS) -q -f tools/bochs/bochsrc/bochsrc-hd-dbg.bxrc	
+	@$(BOCHS) -q -f tools/bochs/bochsrc/bochsrc-hd-dbg.bxrc
 
 bochs:
 ifeq ($(BOCHS),)
 	@(cd tools/bochs/bochs-2.3.7; \
-	./configure --enable-plugins --enable-disasm --enable-gdb-stub;\
+	./configure --enable-plugins --enable-disasm --enable-gdb-stub; \
 	make)
 endif
 
@@ -160,8 +166,7 @@ ifeq ($(CALLTREE),)
 endif
 
 calltree-clean:
-	@(find tools/calltree-2.3 -name "*.o" \
-	-o -name "calltree" -type f | xargs -i rm -f {})
+	@(find tools/calltree-2.3 -name "*.o" -o -name "calltree" -type f | xargs -i rm -f {})
 
 cg: callgraph
 callgraph:
@@ -184,18 +189,18 @@ help:
 	@echo ""
 	@echo "Note!:"
 	@echo "     * You need to install the following basic tools:"
-	@echo "          ubuntu|debian, qemu|bochs, ctags, cscope, calltree, graphviz "
+	@echo "          ubuntu|debian, qemu|bochs, ctags, cscope, calltree, graphviz"
 	@echo "          vim-full, build-essential, hex, dd, gcc 4.3.2..."
 	@echo "     * Becarefull to change the compiling options, which will heavily"
 	@echo "     influence the compiling procedure and running result."
 	@echo ""
 	@echo "Author:"
 	@echo "     * 1991, linus write and release the original linux 0.95(linux 0.11)."
-	@echo "     * 2005, jiong.zhao<gohigh@sh163.net> release a new version "
-	@echo "     which can be used in RedHat 9 along with the book 'Explaining "
+	@echo "     * 2005, jiong.zhao<gohigh@sh163.net> release a new version"
+	@echo "     which can be used in RedHat 9 along with the book 'Explaining"
 	@echo "     Linux-0.11 Completly', and he build a site http://www.oldlinux.org"
 	@echo "     * 2008, falcon<wuzhangjin@gmail.com> release a new version which can be"
-	@echo "     used in ubuntu|debian 32bit|64bit with gcc 4.3.2, and give some new "
+	@echo "     used in ubuntu|debian 32bit|64bit with gcc 4.3.2, and give some new"
 	@echo "     features for experimenting. such as this help info, boot/bootsect.s and"
 	@echo "     boot/setup.s with AT&T rewritting, porting to gcc 4.3.2 :-)"
 	@echo ""

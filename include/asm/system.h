@@ -49,19 +49,24 @@ __asm__ ("movw %%dx,%%ax\n\t" \
 	*((gate_addr)+1) = (((base) & 0x0000ffff)<<16) | \
 		((limit) & 0x0ffff); }
 
-#define _set_tssldt_desc(n,addr,type) \
-__asm__ ("movw $104,%1\n\t" \
-	"movw %%ax,%2\n\t" \
-	"rorl $16,%%eax\n\t" \
-	"movb %%al,%3\n\t" \
-	"movb $" type ",%4\n\t" \
-	"movb $0x00,%5\n\t" \
-	"movb %%ah,%6\n\t" \
-	"rorl $16,%%eax" \
-	::"a" (addr), "m" (*(n)), "m" (*(n+2)), "m" (*(n+4)), \
-	 "m" (*(n+5)), "m" (*(n+6)), "m" (*(n+7)) \
-	)
+/* GCC 15+ friendly: build TSS/LDT descriptor in C (8 bytes). */
+static inline void _set_tssldt_desc(char *n, unsigned long addr, unsigned char type)
+{
+    /* limit = 104 bytes */
+    unsigned short limit = 104;
 
-#define set_tss_desc(n,addr) _set_tssldt_desc(((char *) (n)),((int)(addr)),"0x89")
-#define set_ldt_desc(n,addr) _set_tssldt_desc(((char *) (n)),((int)(addr)),"0x82")
+    n[0] = (unsigned char)(limit & 0xff);
+    n[1] = (unsigned char)((limit >> 8) & 0xff);
+
+    n[2] = (unsigned char)(addr & 0xff);
+    n[3] = (unsigned char)((addr >> 8) & 0xff);
+    n[4] = (unsigned char)((addr >> 16) & 0xff);
+
+    n[5] = type;  /* 0x89 for TSS, 0x82 for LDT */
+    n[6] = 0x00;
+    n[7] = (unsigned char)((addr >> 24) & 0xff);
+}
+
+#define set_tss_desc(n, addr) _set_tssldt_desc((char *)(n), (unsigned long)(addr), 0x89)
+#define set_ldt_desc(n, addr) _set_tssldt_desc((char *)(n), (unsigned long)(addr), 0x82)
 
