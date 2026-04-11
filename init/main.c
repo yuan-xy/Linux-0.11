@@ -110,18 +110,29 @@ void main(void)		/* This really IS void, no error here. */
  * enable them
  */
 
+ 	/* 设置根设备，使用引导程序传入的原始根设备号 */
  	ROOT_DEV = ORIG_ROOT_DEV;
+ 	/* 复制硬盘驱动器信息到内核全局变量 */
  	drive_info = DRIVE_INFO;
+	/* 计算可用内存总量：1MB 基础内存 + 扩展内存（EXT_MEM_K 单位为 KB，左移 10 位转为字节） */
 	memory_end = (1<<20) + (EXT_MEM_K<<10);
+	/* 按 4KB 页面对齐，掩码清除低 12 位 */
 	memory_end &= 0xfffff000;
+	/* Linux 0.11 最大只支持 16MB 内存，超出部分截断 */
 	if (memory_end > 16*1024*1024)
 		memory_end = 16*1024*1024;
-	if (memory_end > 12*1024*1024) 
+	/* 根据总内存大小划分缓冲区（buffer cache）区域：
+	 *   > 12MB → 4MB 缓冲区
+	 *   > 6MB  → 2MB 缓冲区
+	 *   ≤ 6MB  → 1MB 缓冲区
+	 * 缓冲区用于块设备缓存，内存越大分配越多以提升磁盘性能 */
+	if (memory_end > 12*1024*1024)
 		buffer_memory_end = 4*1024*1024;
 	else if (memory_end > 6*1024*1024)
 		buffer_memory_end = 2*1024*1024;
 	else
 		buffer_memory_end = 1*1024*1024;
+	/* 主内存从缓冲区之后开始，剩余部分供进程分配使用 */
 	main_memory_start = buffer_memory_end;
 #ifdef RAMDISK
 	main_memory_start += rd_init(main_memory_start, RAMDISK*1024);
